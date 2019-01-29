@@ -19,7 +19,7 @@ const (
 func main() {
 	addr := fmt.Sprintf("%s:%d", FQDN, 4444)
 	// Create the client TLS credentials
-	creds, err := credentials.NewClientTLSFromFile("./../tls/server.crt", "")
+	creds, err := credentials.NewClientTLSFromFile("./../tls/ca.crt", "")
 	if err != nil {
 		log.Fatalf("could not load tls cert: %s", err)
 	}
