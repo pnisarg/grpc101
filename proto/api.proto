@@ -1,0 +1,36 @@
+/*
+This file defines what can be said between server and client.
+
+It allows you to define two things "service" and "message".
+A service is a collection of actions the server can perform at the client’s request.
+A message is the content of this request.
+To simplify, you can say that service defines actions, while message defines objects.
+*/
+syntax = "proto3";
+
+package proto;
+
+message PingMessage {
+    string greeting = 1;
+}
+
+// Ping service exposes a function called `SayHello` which takes `PingMessage` and returns `PingMessage`.
+service Ping {
+    rpc SayHello(PingMessage) returns (PingMessage) {}
+}
+
+
+// Notes:
+/*
+This file cannot be used as is. It needs to get compiled. 
+Compiling the proto file means generating code for your chosen language, that your application will actually call.
+
+Compiling proto files:
+
+Change directory where your *.proto files are, and run the following command.
+$protoc -I. -I$GOPATH/src --go_out=plugins=grpc:. api.proto
+
+Running this command should have generated `api.pb.go` file automatically. This is what will be used in our code.
+
+
+*/
