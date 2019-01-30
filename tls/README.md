@@ -34,3 +34,10 @@ We will use this to test our setup. Start server with self-signed certificate an
 $openssl req -new -key server.key -out server1.csr
 $openssl x509 -req -sha256 -in server1.csr -signkey server.key -out server1.crt -days 365
 ```
+
+#### Create client cert
+```
+$openssl genrsa -out client.key 2048
+$openssl req -new -key client.key -out client.csr
+$openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 365 -sha256
+```
