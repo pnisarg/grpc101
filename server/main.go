@@ -1,7 +1,10 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 
@@ -13,10 +16,12 @@ import (
 
 const (
 	// FQDN of the server.
-	// TODO: should ideally come from config.
-	FQDN = "localhost"
-	// TODO: should ideally come from config.
-	port = 4444
+	// TODO: following values should ideally come from config.
+	FQDN       = "localhost"
+	port       = 4444
+	certPath   = "./../tls/server.crt"
+	keyPath    = "./../tls/server.key"
+	caCertPath = "./../tls/ca.crt"
 )
 
 // main start a gRPC server and waits for connection
@@ -31,12 +36,39 @@ func main() {
 	// create a server instance
 	s := api.Server{}
 
-	// Create the TLS credentials.
-	// cert and key files should securly be deployed to the server. File path should come from config.
-	creds, err := credentials.NewServerTLSFromFile("./../tls/server.crt", "./../tls/server.key")
+	// Create the TLS credentials for server.
+	certificate, err := tls.LoadX509KeyPair(certPath, keyPath)
 	if err != nil {
-		log.Fatalf("could not load TLS keys: %s", err)
+		log.Fatalf("failed to load server certificates, err: %v", err)
 	}
+
+	// Create certificate pool.
+	certPool := x509.NewCertPool()
+
+	// Read CA certificate.
+	caCert, err := ioutil.ReadFile(caCertPath)
+	if err != nil {
+		log.Fatalf("failed to read CA certificate, err: %v", err)
+	}
+	ok := certPool.AppendCertsFromPEM(caCert)
+	if !ok {
+		log.Fatalf("failed to parse CA cert")
+	}
+
+	// Create tls config for server.
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{certificate},
+		ClientCAs:    certPool,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+	}
+
+	// cert and key files should securly be deployed to the server. File path should come from config.
+	// creds, err := credentials.NewServerTLSFromFile("./../tls/server.crt", "./../tls/server.key")
+	// if err != nil {
+	// 	log.Fatalf("could not load TLS keys: %s", err)
+	// }
+
+	creds := credentials.NewTLS(tlsConfig)
 
 	// Create an array of gRPC options with the credentials
 	opts := []grpc.ServerOption{grpc.Creds(creds)}
@@ -64,8 +96,14 @@ NOTES:
 - start the gRPC server
 
 Adding TLS support
-- you created a credentials object (called creds) from your certificate and key files;
-- you created a grpc.ServerOption array and placed your credentials object in it;
-- when creating the grpc server, you provided the constructor with you array of grpc.ServerOption;
-- you must have noticed that you need to precisely specify the IP you bind your server to, so that the IP matches the FQDN used in the certificate.
+- create a credentials object (called creds) from your certificate and key files;
+- create a grpc.ServerOption array and placed your credentials object in it;
+- Create grpc server with grpc.ServerOption created in above step;
+
+Mutual TLS Auth
+- In addition to what we did for adding TLS support we have to create
+a certPool by reading CA's certificate.
+- Create TLS config.
+	ClientCAs: We will trust the client if it presents certificate signed by any of these CA.
+	Certificates: Server will present these certificates to the clients.
 */
