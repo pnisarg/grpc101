@@ -8,6 +8,8 @@ To simplify, you can say that service defines actions, while message defines obj
 */
 syntax = "proto3";
 
+import "google/api/annotations.proto";
+
 package proto;
 
 message PingMessage {
@@ -16,7 +18,12 @@ message PingMessage {
 
 // Ping service exposes a function called `SayHello` which takes `PingMessage` and returns `PingMessage`.
 service Ping {
-    rpc SayHello(PingMessage) returns (PingMessage) {}
+    rpc SayHello(PingMessage) returns (PingMessage) {
+        option (google.api.http) = {
+            post: "/v1/ping"
+            body: "*"
+        };
+    }
 }
 
 
