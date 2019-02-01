@@ -8,9 +8,9 @@ To simplify, you can say that service defines actions, while message defines obj
 */
 syntax = "proto3";
 
-import "google/api/annotations.proto";
-
 package proto;
+
+import "google/api/annotations.proto";
 
 message PingMessage {
     string greeting = 1;
@@ -35,7 +35,8 @@ Compiling the proto file means generating code for your chosen language, that yo
 Compiling proto files:
 
 Change directory where your *.proto files are, and run the following command.
-$protoc -I. -I$GOPATH/src --go_out=plugins=grpc:. api.proto
+$protoc -I. -I$GOPATH/src -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --go_out=plugins=grpc:. api.proto
+$protoc -I. -I$GOPATH/src -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --grpc-gateway_out=logtostderr=true:./ api.proto
 
 Running this command should have generated `api.pb.go` file automatically. This is what will be used in our code.
 
